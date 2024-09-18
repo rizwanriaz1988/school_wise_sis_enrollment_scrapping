@@ -9,7 +9,7 @@ from selenium.webdriver.support import expected_conditions as EC
 import pandas as pd
 from datetime import datetime
 # Path to your ChromeDriver
-chrome_driver_path = 'C:/Web Drivers/chromedriver.exe'
+chrome_driver_path = '/usr/bin/chromedriver'
 
 # Use Service to specify ChromeDriver path
 service = Service(executable_path=chrome_driver_path)
