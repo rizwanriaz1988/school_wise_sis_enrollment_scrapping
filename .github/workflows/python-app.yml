@@ -24,5 +24,22 @@ jobs:
         python -m pip install --upgrade pip
         pip install selenium pandas openpyxl
 
+    # Install Chrome browser
+    - name: Install Chrome
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y google-chrome-stable
+
+    # Install ChromeDriver
+    - name: Install ChromeDriver
+      run: |
+        sudo apt-get install -y chromedriver
+
+    # Ensure ChromeDriver is available in the PATH
+    - name: Set ChromeDriver path
+      run: echo 'export PATH=$PATH:/usr/lib/chromium-browser/' >> $GITHUB_ENV
+
+    # Run your Python script
     - name: Run the Python script
-      run: python sis_school_enrollment.py
+      run: |
+        python sis_school_enrollment.py
