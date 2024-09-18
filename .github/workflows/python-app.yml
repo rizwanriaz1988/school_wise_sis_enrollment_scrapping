@@ -62,3 +62,15 @@ jobs:
     - name: Run the Python script
       run: |
         python sis_school_enrollment.py
+
+    # List files after running the script to debug
+    - name: List files after script execution
+      run: |
+        ls -la
+
+    # Upload the generated Excel file as an artifact
+    - name: Upload Excel file
+      uses: actions/upload-artifact@v3
+      with:
+        name: school-enrollment-data
+        path: '*.xlsx'
