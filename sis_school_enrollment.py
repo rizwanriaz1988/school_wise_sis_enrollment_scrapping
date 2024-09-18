@@ -8,14 +8,18 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import pandas as pd
 from datetime import datetime
+
 # Path to your ChromeDriver
 chrome_driver_path = '/usr/bin/chromedriver'
-
 # Use Service to specify ChromeDriver path
 service = Service(executable_path=chrome_driver_path)
 
 # Optional: Set Chrome options if needed
 chrome_options = webdriver.ChromeOptions()
+chrome_options.add_argument("--headless")
+chrome_options.add_argument("--no-sandbox")
+chrome_options.add_argument("--disable-dev-shm-usage")
+chrome_options.add_argument("--disable-gpu")
 
 # Initialize WebDriver with Service and Options
 chrome = webdriver.Chrome(service=service, options=chrome_options)
