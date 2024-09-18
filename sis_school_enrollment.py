@@ -46,7 +46,7 @@ markaz= Select(WebDriverWait(chrome, 10).until(EC.presence_of_element_located((B
 marakaz_list = []
 
 # for loop for looping through marakaz
-for markaz_id in range(6449, 6470):
+for markaz_id in range(6449, 6450):
 # for markaz_id in range(6449, 6450):
 
     markaz.select_by_value(str(markaz_id))
