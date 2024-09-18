@@ -9,6 +9,10 @@ from selenium.webdriver.support import expected_conditions as EC
 import pandas as pd
 from datetime import datetime
 
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+import os
+
 # Path to your ChromeDriver
 chrome_driver_path = '/usr/bin/chromedriver'
 # Use Service to specify ChromeDriver path
@@ -121,3 +125,45 @@ excel_filename = f"school_wise_enrollment_data_{current_date}.xlsx"
 df.to_excel(excel_filename, index=False, engine='openpyxl')
 
 print(f"Data saved to {excel_filename}")
+
+
+# ===============================GOOGLE INTEGRATION==============================================
+# ===============================GOOGLE INTEGRATION==============================================
+
+SERVICE_ACCOUNT_FILE = '/home/runner/service_account_credentials.json'  # Path in GitHub Actions
+SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+
+
+credentials = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+sheets_service = build('sheets', 'v4', credentials=credentials)
+
+# The ID of your Google Sheets spreadsheet and the range to update
+SPREADSHEET_ID = '1i0KG-we9EqZt-PeAPxYscKpVb60sfpq-OcVISJz3a7g'  # Replace with your spreadsheet ID
+RANGE_NAME = 'Sheet1!A1'  # Replace with your desired range
+
+# Load data from Excel file
+df = pd.read_excel(excel_filename)
+
+# Convert DataFrame to a list of lists
+data = df.values.tolist()
+header = df.columns.tolist()
+
+# Prepare the data to be uploaded
+values = [header] + data
+
+# Call the Sheets API
+body = {
+    'values': values
+}
+
+result = sheets_service.spreadsheets().values().update(
+    spreadsheetId=SPREADSHEET_ID,
+    range=RANGE_NAME,
+    valueInputOption='RAW',
+    body=body
+).execute()
+
+print(f"{result.get('updatedCells')} cells updated in Google Sheets.")
+
+
+
