@@ -36,11 +36,11 @@ jobs:
     # Install matching ChromeDriver based on the installed Chrome version
     - name: Install ChromeDriver
       run: |
-        # Extract the major version of Chrome
+        # Extract the major version of Chrome (more reliable method)
         CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+\.\d+' | cut -d '.' -f 1)
         echo "Installed Chrome version: $CHROME_VERSION"
         
-        # Fetch the latest ChromeDriver matching the major version of Chrome
+        # Fetch the correct ChromeDriver version
         DRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION")
         
         if [ -z "$DRIVER_VERSION" ]; then
