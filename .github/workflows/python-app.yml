@@ -25,8 +25,13 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install selenium pandas openpyxl
+        pip install selenium pandas openpyxl google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client
 
+    - name: Create credentials file
+      run: |
+        echo "${{ secrets.GOOGLE_SHEET_CREDENTIALS }}" > /home/runner/service_account_credentials.json
+
+    
     # Check if Chrome is installed and install if necessary
     - name: Check and Install Chrome
       run: |
