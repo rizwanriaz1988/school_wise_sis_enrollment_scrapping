@@ -7,8 +7,8 @@ name: Python application
 on:
   schedule:
     # - cron: '0 5 * * *'  # Runs daily at 5 AM UTC
-    # - cron: '0 21 * * *'  # Runs daily at 9 PM UTC
-    - cron: '0 20 * * *'  # Runs daily at 8:40 PM UTC
+    - cron: '0 21 * * *'  # Runs daily at 9 PM UTC
+    # - cron: '0 20 * * *'  # Runs daily at 8:40 PM UTC
   workflow_dispatch:
 
 jobs:
