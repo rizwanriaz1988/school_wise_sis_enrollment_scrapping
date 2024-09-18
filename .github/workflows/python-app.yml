@@ -28,16 +28,20 @@ jobs:
     - name: Install Chrome
       run: |
         sudo apt-get update
-        sudo apt-get install -y google-chrome-stable
+        sudo apt-get install -y wget unzip
+        wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+        sudo dpkg -i google-chrome-stable_current_amd64.deb || sudo apt-get install -f -y
+        google-chrome --version
 
     # Install ChromeDriver
     - name: Install ChromeDriver
       run: |
-        sudo apt-get install -y chromedriver
-
-    # Ensure ChromeDriver is available in the PATH
-    - name: Set ChromeDriver path
-      run: echo 'export PATH=$PATH:/usr/lib/chromium-browser/' >> $GITHUB_ENV
+        CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+')
+        wget -N https://chromedriver.storage.googleapis.com/$CHROME_VERSION/chromedriver_linux64.zip
+        unzip chromedriver_linux64.zip
+        sudo mv chromedriver /usr/local/bin/chromedriver
+        sudo chmod +x /usr/local/bin/chromedriver
+        chromedriver --version
 
     # Run your Python script
     - name: Run the Python script
