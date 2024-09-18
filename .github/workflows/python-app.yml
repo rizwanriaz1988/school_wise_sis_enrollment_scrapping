@@ -1,13 +1,11 @@
 name: Python application
 
-# on:
-#   push:
-#     branches:
-#       - main
 on:
-  schedule:
-    # - cron: '0 5 * * *'  # Runs daily at 5 AM UTC
-    - cron: '25 16 * * *'  # Runs daily at 9 PM UTC
+  push:
+    branches:
+      - main
+# on:
+  # schedule:
     # - cron: '0 20 * * *'  # Runs daily at 8:40 PM UTC
   workflow_dispatch:
 
