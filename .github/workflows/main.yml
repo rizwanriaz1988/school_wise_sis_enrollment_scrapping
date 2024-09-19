@@ -1,6 +1,36 @@
-- name: Create credentials file
-  run: |
-    echo "${{ secrets.GOOGLE_SHEET_CREDENTIALS }}" > /home/runner/service_account_credentials.json
-- name: Validate private key
-  run: |
-    grep 'PRIVATE KEY' /home/runner/service_account_credentials.json
+name: Check Google Service Account Credentials
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  test-google-credentials:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Checkout your repository
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    # Create the credentials file from secret
+    - name: Create credentials file
+      run: |
+        echo "${{ secrets.GOOGLE_SHEET_CREDENTIALS }}" > /home/runner/service_account_credentials.json
+
+    # Validate private key exists in the file and is correctly formatted
+    - name: Check private key
+      run: |
+        cat /home/runner/service_account_credentials.json
+        if grep -q '-----BEGIN PRIVATE KEY-----' /home/runner/service_account_credentials.json; then
+          echo "Private key is correctly formatted."
+        else
+          echo "Private key formatting issue!" && exit 1
+        fi
+
+    # Validate the file structure using jq (optional, to check JSON validity)
+    - name: Validate JSON structure
+      run: |
+        cat /home/runner/service_account_credentials.json | jq .
