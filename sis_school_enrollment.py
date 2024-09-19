@@ -131,6 +131,13 @@ body = {
     'values': values
 }
 
+# Clear the existing data in the range
+sheets_service.spreadsheets().values().clear(
+    spreadsheetId=SPREADSHEET_ID,
+    range=RANGE_NAME
+).execute()
+
+
 result = sheets_service.spreadsheets().values().update(
     spreadsheetId=SPREADSHEET_ID,
     range=RANGE_NAME,
