@@ -43,6 +43,13 @@ jobs:
           # List authenticated accounts to verify
           gcloud auth list
 
+      # Enable Cloud Resource Manager API if it is not already enabled
+      - name: Enable Cloud Resource Manager API
+        run: |
+          PROJECT_ID=$(gcloud config get-value project)
+          echo "Enabling Cloud Resource Manager API for project $PROJECT_ID..."
+          gcloud services enable cloudresourcemanager.googleapis.com --project $PROJECT_ID
+
       # Verify access by listing available Google Cloud projects (example check)
       - name: Verify Service Account Permissions
         run: gcloud projects list
