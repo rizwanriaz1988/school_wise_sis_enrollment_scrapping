@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - main
-# on:
-  # schedule:
-    # - cron: '0 20 * * *'  # Runs daily at 8:40 PM UTC
   workflow_dispatch:
 
 jobs:
@@ -34,9 +31,11 @@ jobs:
     - name: Display credentials file
       run: |
         cat /home/runner/service_account_credentials.json
-    
-    
-    # Check if Chrome is installed and install if necessary
+
+    - name: Validate JSON
+      run: |
+        cat /home/runner/service_account_credentials.json | jq .
+
     - name: Check and Install Chrome
       run: |
         if ! command -v google-chrome &> /dev/null; then
@@ -50,10 +49,8 @@ jobs:
           echo "Chrome is already installed."
         fi
 
-    # Use a static ChromeDriver version
     - name: Install static ChromeDriver
       run: |
-        # Define the static ChromeDriver version
         DRIVER_VERSION="128.0.6613.137"
         DRIVER_URL="https://storage.googleapis.com/chrome-for-testing-public/$DRIVER_VERSION/linux64/chromedriver-linux64.zip"
 
@@ -70,17 +67,14 @@ jobs:
         sudo chmod +x /usr/local/bin/chromedriver
         chromedriver --version
 
-    # Run your Python script
     - name: Run the Python script
       run: |
         python sis_school_enrollment.py
 
-    # List files after running the script to debug
     - name: List files after script execution
       run: |
         ls -la
 
-    # Upload the generated Excel file as an artifact
     - name: Upload Excel file
       uses: actions/upload-artifact@v3
       with:
