@@ -1,0 +1,6 @@
+- name: Create credentials file
+  run: |
+    echo "${{ secrets.GOOGLE_SHEET_CREDENTIALS }}" > /home/runner/service_account_credentials.json
+- name: Validate private key
+  run: |
+    grep 'PRIVATE KEY' /home/runner/service_account_credentials.json
