@@ -184,6 +184,11 @@ import os
 # Path to the Base64-encoded Google credentials from the environment variable
 BASE64_ENCODED_GOOGLE_CREDENTIALS = os.getenv('GOOGLE_SHEET_CREDENTIALS')
 
+
+if BASE64_ENCODED_GOOGLE_CREDENTIALS is None:
+    raise ValueError("The environment variable GOOGLE_SHEET_CREDENTIALS is not set or is empty.")
+
+
 # Decode and save the Base64-encoded Google credentials
 credentials_file_path = '/home/runner/service_account_credentials.json'
 with open(credentials_file_path, 'wb') as f:
