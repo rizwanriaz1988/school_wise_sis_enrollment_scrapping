@@ -185,7 +185,7 @@ import os
 BASE64_ENCODED_GOOGLE_CREDENTIALS = os.getenv('GOOGLE_SHEET_CREDENTIALS')
 
 
-if BASE64_ENCODED_GOOGLE_CREDENTIALS is None or google_sheet_credentials == '':
+if BASE64_ENCODED_GOOGLE_CREDENTIALS is None or BASE64_ENCODED_GOOGLE_CREDENTIALS == '':
     raise ValueError("The environment variable GOOGLE_SHEET_CREDENTIALS is not set or is empty.")
 
 
