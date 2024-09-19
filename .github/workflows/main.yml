@@ -1,40 +1,35 @@
-name: Check Google Service Account Credentials
+name: Test Google Service Account
 
 on:
   push:
     branches:
       - main
-  workflow_dispatch:
+  workflow_dispatch: # Allows manually triggering the workflow
 
 jobs:
-  test-google-credentials:
+  check-google-service-account:
     runs-on: ubuntu-latest
 
     steps:
-    # Checkout your repository
-    - name: Checkout code
-      uses: actions/checkout@v2
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    # Create the credentials file from secret
-    - name: Create credentials file
-      run: |
-        echo "${{ secrets.GOOGLE_SHEET_CREDENTIALS }}" > /home/runner/service_account_credentials.json
+      # Set up Google Cloud SDK
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          version: 'latest'
 
-    # Display the contents of the file for debugging
-    - name: Show credentials file
-      run: cat /home/runner/service_account_credentials.json
+      # Authenticate with Google Cloud using the service account JSON
+      - name: Authenticate to Google Cloud
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_SHEET_CREDENTIALS }}
+        run: |
+          echo "$GOOGLE_CREDENTIALS" > "$HOME/gcloud-service-key.json"
+          gcloud auth activate-service-account --key-file="$HOME/gcloud-service-key.json"
+          gcloud auth list
 
-    # Validate the presence of 'private_key' field and correct formatting using jq
-    - name: Validate private key formatting
-      run: |
-        PRIVATE_KEY=$(jq -r '.private_key' /home/runner/service_account_credentials.json)
-        if [[ $PRIVATE_KEY == *"-----BEGIN PRIVATE KEY-----"* ]]; then
-          echo "Private key is correctly formatted."
-        else
-          echo "Private key formatting issue!" && exit 1
-        fi
-
-    # Validate the file structure using jq
-    - name: Validate JSON structure
-      run: |
-        cat /home/runner/service_account_credentials.json | jq .
+      # Verify access by listing available Google Cloud projects (example check)
+      - name: Verify Service Account Permissions
+        run: gcloud projects list
