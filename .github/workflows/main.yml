@@ -26,8 +26,18 @@ jobs:
         env:
           GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_SHEET_CREDENTIALS }}
         run: |
+          # Save the secret to a JSON file
           echo "$GOOGLE_CREDENTIALS" > "$HOME/gcloud-service-key.json"
+
+          # Validate the JSON format using jq
+          echo "Validating JSON format..."
+          cat "$HOME/gcloud-service-key.json" | jq .
+
+          # Authenticate with the service account
+          echo "Authenticating with Google Cloud..."
           gcloud auth activate-service-account --key-file="$HOME/gcloud-service-key.json"
+
+          # List authenticated accounts to verify
           gcloud auth list
 
       # Verify access by listing available Google Cloud projects (example check)
