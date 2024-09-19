@@ -1,9 +1,9 @@
 name: Test Google Service Account
 
 on:
-  push:
-    branches:
-      - main
+  # push:
+  #   branches:
+  #     - main
   workflow_dispatch: # Allows manually triggering the workflow
 
 jobs:
