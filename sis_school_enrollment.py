@@ -217,7 +217,8 @@ district.select_by_value('33')  # Replace with actual district value
 tehsil = Select(WebDriverWait(chrome, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="enrollment_tab_form"]/div[2]/select'))))
 tehsil.select_by_value('116')  # Replace with actual tehsil value
 
-markaz = Select(WebDriverWait(chrome, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="enrollment_tab_form"]/div[3]/select'])))
+markaz = Select(WebDriverWait(chrome, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="enrollment_tab_form"]/div[3]/select'))))
+
 
 # Prepare to scrape data
 marakaz_list = []
