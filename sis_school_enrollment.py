@@ -291,6 +291,7 @@ SPREADSHEET_ID = '1i0KG-we9EqZt-PeAPxYscKpVb60sfpq-OcVISJz3a7g'  # Replace with 
 RANGE_NAME = 'Sheet1!A1'
 
 df = pd.read_excel(excel_filename)
+df.fillna('', inplace=True)  # Replace NaN with empty string
 data = df.values.tolist()
 header = df.columns.tolist()
 values = [header] + data
