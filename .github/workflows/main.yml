@@ -20,17 +20,21 @@ jobs:
       run: |
         echo "${{ secrets.GOOGLE_SHEET_CREDENTIALS }}" > /home/runner/service_account_credentials.json
 
-    # Validate private key exists in the file and is correctly formatted
-    - name: Check private key
+    # Display the contents of the file for debugging
+    - name: Show credentials file
+      run: cat /home/runner/service_account_credentials.json
+
+    # Validate the presence of 'private_key' field and correct formatting using jq
+    - name: Validate private key formatting
       run: |
-        cat /home/runner/service_account_credentials.json
-        if grep -q '-----BEGIN PRIVATE KEY-----' /home/runner/service_account_credentials.json; then
+        PRIVATE_KEY=$(jq -r '.private_key' /home/runner/service_account_credentials.json)
+        if [[ $PRIVATE_KEY == *"-----BEGIN PRIVATE KEY-----"* ]]; then
           echo "Private key is correctly formatted."
         else
           echo "Private key formatting issue!" && exit 1
         fi
 
-    # Validate the file structure using jq (optional, to check JSON validity)
+    # Validate the file structure using jq
     - name: Validate JSON structure
       run: |
         cat /home/runner/service_account_credentials.json | jq .
