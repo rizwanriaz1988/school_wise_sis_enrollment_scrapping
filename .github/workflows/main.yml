@@ -40,15 +40,21 @@ jobs:
           echo "Authenticating with Google Cloud..."
           gcloud auth activate-service-account --key-file="$HOME/gcloud-service-key.json"
 
+          # Set the project ID manually (update this with your actual project ID)
+          echo "Setting project ID..."
+          gcloud config set project your-project-id
+
+          # Verify the project ID
+          echo "Verifying project ID..."
+          PROJECT_ID=$(gcloud config get-value project)
+          echo "PROJECT_ID=$PROJECT_ID"
+
+          # Enable Cloud Resource Manager API
+          echo "Enabling Cloud Resource Manager API for project $PROJECT_ID..."
+          gcloud services enable cloudresourcemanager.googleapis.com --project=$PROJECT_ID
+
           # List authenticated accounts to verify
           gcloud auth list
-
-      # Enable Cloud Resource Manager API if it is not already enabled
-      - name: Enable Cloud Resource Manager API
-        run: |
-          PROJECT_ID=$(gcloud config get-value project)
-          echo "Enabling Cloud Resource Manager API for project $PROJECT_ID..."
-          gcloud services enable cloudresourcemanager.googleapis.com --project $PROJECT_ID
 
       # Verify access by listing available Google Cloud projects (example check)
       - name: Verify Service Account Permissions
