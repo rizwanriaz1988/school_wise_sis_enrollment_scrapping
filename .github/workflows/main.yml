@@ -1,82 +1,62 @@
-name: Python application
+name: Test Google Service Account
 
 on:
   push:
     branches:
       - main
-  workflow_dispatch:
+  workflow_dispatch: # Allows manually triggering the workflow
 
 jobs:
-  build:
+  check-google-service-account:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.x'
+      # Set up Google Cloud SDK
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          version: 'latest'
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install selenium pandas openpyxl google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client
+      # Decode the Base64-encoded service account JSON secret and save it to a file
+      - name: Decode and Save Service Account Key
+        env:
+          BASE64_ENCODED_GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_SHEET_CREDENTIALS }}
+        run: |
+          echo "Decoding the Base64 secret..."
+          echo "$BASE64_ENCODED_GOOGLE_CREDENTIALS" | base64 --decode > "$HOME/gcloud-service-key.json"
 
-    - name: Create credentials file
-      run: |
-        echo "${{ secrets.GOOGLE_SHEET_CREDENTIALS }}" > /home/runner/service_account_credentials.json
+      # Authenticate with Google Cloud using the service account JSON
+      - name: Authenticate to Google Cloud
+        run: |
+          # Validate the JSON format using jq
+          echo "Validating JSON format..."
+          cat "$HOME/gcloud-service-key.json" | jq .
 
-    - name: Display credentials file
-      run: |
-        cat /home/runner/service_account_credentials.json
+          # Authenticate with the service account
+          echo "Authenticating with Google Cloud..."
+          gcloud auth activate-service-account --key-file="$HOME/gcloud-service-key.json"
 
-    - name: Validate JSON
-      run: |
-        cat /home/runner/service_account_credentials.json | jq .
+          # Set the project ID manually (update this with your actual project ID)
+          PROJECT_ID="valid-perigee-402216"  # Replace with your actual project ID
+          echo "Setting project ID to $PROJECT_ID..."
+          gcloud config set project $PROJECT_ID
 
-    - name: Check and Install Chrome
-      run: |
-        if ! command -v google-chrome &> /dev/null; then
-          echo "Chrome not found, installing..."
-          sudo apt-get update
-          sudo apt-get install -y wget unzip
-          wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-          sudo dpkg -i google-chrome-stable_current_amd64.deb || sudo apt-get install -f -y
-          google-chrome --version
-        else
-          echo "Chrome is already installed."
-        fi
+          # Verify the project ID
+          echo "Verifying project ID..."
+          PROJECT_ID=$(gcloud config get-value project)
+          echo "PROJECT_ID=$PROJECT_ID"
 
-    - name: Install static ChromeDriver
-      run: |
-        DRIVER_VERSION="128.0.6613.137"
-        DRIVER_URL="https://storage.googleapis.com/chrome-for-testing-public/$DRIVER_VERSION/linux64/chromedriver-linux64.zip"
+          # Enable Cloud Resource Manager API
+          echo "Enabling Cloud Resource Manager API for project $PROJECT_ID..."
+          gcloud services enable cloudresourcemanager.googleapis.com --project=$PROJECT_ID
 
-        echo "Downloading ChromeDriver from: $DRIVER_URL"
-        wget $DRIVER_URL -O chromedriver-linux64.zip
+          # List authenticated accounts to verify
+          gcloud auth list
 
-        if [ ! -f chromedriver-linux64.zip ]; then
-          echo "Failed to download ChromeDriver. Exiting."
-          exit 1
-        fi
-
-        unzip chromedriver-linux64.zip
-        sudo mv chromedriver-linux64/chromedriver /usr/local/bin/chromedriver
-        sudo chmod +x /usr/local/bin/chromedriver
-        chromedriver --version
-
-    - name: Run the Python script
-      run: |
-        python sis_school_enrollment.py
-
-    - name: List files after script execution
-      run: |
-        ls -la
-
-    - name: Upload Excel file
-      uses: actions/upload-artifact@v3
-      with:
-        name: school-enrollment-data
-        path: '*.xlsx'
+      # Verify access by listing available Google Cloud projects (example check)
+      - name: Verify Service Account Permissions
+        run: gcloud projects list
