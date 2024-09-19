@@ -166,19 +166,45 @@
 # ).execute()
 
 # print(f"{result.get('updatedCells')} cells updated in Google Sheets.")
-import os
-import base64
 
-# Retrieve and decode the secret
-google_sheet_credentials = os.getenv('GOOGLE_SHEET_CREDENTIALS')
 
-if not google_sheet_credentials:
-    raise ValueError("The environment variable GOOGLE_SHEET_CREDENTIALS is not set or is empty.")
 
-service_account_file = '/home/runner/service_account_credentials.json'
+name: Run SIS School Enrollment Scraping
 
-# Decode the Base64 encoded credentials and write to file
-with open(service_account_file, 'wb') as f:
-    f.write(base64.b64decode(google_sheet_credentials))
+on:
+  schedule:
+    - cron: '0 21 * * *'  # This will run the workflow daily at 9:00 PM Pakistan time (UTC+5)
+  workflow_dispatch: # Allows for manual trigger
 
-print(f"Service account file created at {service_account_file}")
+jobs:
+  run-scraping:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install selenium pandas google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client openpyxl
+
+    - name: Decode Google Sheets credentials
+      run: |
+        echo "${{ secrets.GOOGLE_SHEET_CREDENTIALS }}" | base64 -d > /home/runner/service_account_credentials.json
+
+    - name: Run Python script
+      run: |
+        python sis_school_enrollment.py
+
+    - name: Upload results to artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: enrollment-data
+        path: school_wise_enrollment_data_*.xlsx
+
