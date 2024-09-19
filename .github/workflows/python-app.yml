@@ -11,64 +11,71 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.12'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install selenium pandas openpyxl google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install selenium pandas openpyxl google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client
 
-    - name: Decode Google Sheets credentials
-      run: |
-        echo "${{ secrets.GOOGLE_SHEET_CREDENTIALS }}" | base64 -d > /home/runner/service_account_credentials.json
+      - name: Decode Google Sheets credentials
+        run: |
+          echo "${{ secrets.GOOGLE_SHEET_CREDENTIALS }}" | base64 -d > /home/runner/service_account_credentials.json
 
-    - name: Check for Chrome installation and install if necessary
-      run: |
-        if ! command -v google-chrome &> /dev/null; then
-          echo "Chrome not found, installing..."
-          sudo apt-get update
-          sudo apt-get install -y wget unzip
-          wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-          sudo dpkg -i google-chrome-stable_current_amd64.deb || sudo apt-get install -f -y
-          google-chrome --version
-        else
-          echo "Chrome is already installed."
-        fi
+      - name: Validate credentials file
+        run: |
+          cat /home/runner/service_account_credentials.json
+          jq . /home/runner/service_account_credentials.json  # Validate the JSON structure
 
-    - name: Install ChromeDriver
-      run: |
-        DRIVER_VERSION="128.0.6613.137"
-        DRIVER_URL="https://storage.googleapis.com/chrome-for-testing-public/$DRIVER_VERSION/linux64/chromedriver-linux64.zip"
+      - name: Check for Chrome installation and install if necessary
+        run: |
+          if ! command -v google-chrome &> /dev/null; then
+            echo "Chrome not found, installing..."
+            sudo apt-get update
+            sudo apt-get install -y wget unzip
+            wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+            sudo dpkg -i google-chrome-stable_current_amd64.deb || sudo apt-get install -f -y
+            google-chrome --version
+          else
+            echo "Chrome is already installed."
+          fi
 
-        echo "Downloading ChromeDriver from: $DRIVER_URL"
-        wget $DRIVER_URL -O chromedriver-linux64.zip
+      - name: Install ChromeDriver
+        run: |
+          DRIVER_VERSION="128.0.6613.137"
+          DRIVER_URL="https://storage.googleapis.com/chrome-for-testing-public/$DRIVER_VERSION/linux64/chromedriver-linux64.zip"
 
-        if [ ! -f chromedriver-linux64.zip ]; then
-          echo "Failed to download ChromeDriver. Exiting."
-          exit 1
-        fi
+          echo "Downloading ChromeDriver from: $DRIVER_URL"
+          wget $DRIVER_URL -O chromedriver-linux64.zip
 
-        unzip chromedriver-linux64.zip
-        sudo mv chromedriver-linux64/chromedriver /usr/local/bin/chromedriver
-        sudo chmod +x /usr/local/bin/chromedriver
-        chromedriver --version
+          if [ ! -f chromedriver-linux64.zip ]; then
+            echo "Failed to download ChromeDriver. Exiting."
+            exit 1
+          fi
 
-    - name: Run Python script
-      run: |
-        python sis_school_enrollment.py
+          unzip chromedriver-linux64.zip
+          sudo mv chromedriver-linux64/chromedriver /usr/local/bin/chromedriver
+          sudo chmod +x /usr/local/bin/chromedriver
+          chromedriver --version
 
-    - name: List files after script execution
-      run: |
-        ls -la
+      - name: Run Python script
+        run: |
+          python sis_school_enrollment.py
+        env:
+          GOOGLE_SHEET_CREDENTIALS: ${{ secrets.GOOGLE_SHEET_CREDENTIALS }}  # Pass the secret to the script
 
-    - name: Upload Excel file
-      uses: actions/upload-artifact@v3
-      with:
-        name: school-enrollment-data
-        path: '*.xlsx'
+      - name: List files after script execution
+        run: |
+          ls -la
+
+      - name: Upload Excel file
+        uses: actions/upload-artifact@v3
+        with:
+          name: school-enrollment-data
+          path: '*.xlsx'
