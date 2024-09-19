@@ -286,7 +286,7 @@ df.to_excel(excel_filename, index=False, engine='openpyxl')
 print(f"Data saved to {excel_filename}")
 
 # ===============================GOOGLE INTEGRATION==============================================
-SERVICE_ACCOUNT_FILE = credentials_file_path  # Path in GitHub Actions
+SERVICE_ACCOUNT_FILE = '/home/runner/service_account_credentials.json'  # Path in GitHub Actions
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
 credentials = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
