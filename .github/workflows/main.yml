@@ -41,8 +41,9 @@ jobs:
           gcloud auth activate-service-account --key-file="$HOME/gcloud-service-key.json"
 
           # Set the project ID manually (update this with your actual project ID)
-          echo "Setting project ID..."
-          gcloud config set project your-project-id
+          PROJECT_ID="valid-perigee-402216"  # Replace with your actual project ID
+          echo "Setting project ID to $PROJECT_ID..."
+          gcloud config set project $PROJECT_ID
 
           # Verify the project ID
           echo "Verifying project ID..."
