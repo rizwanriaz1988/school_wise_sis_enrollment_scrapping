@@ -26,10 +26,11 @@ jobs:
 
     - name: Create credentials file
       run: |
+        if [ -z "${{ secrets.GOOGLE_SHEET_CREDENTIALS }}" ]; then
+          echo "The environment variable GOOGLE_SHEET_CREDENTIALS is not set or is empty."
+          exit 1
+        fi
         echo "${{ secrets.GOOGLE_SHEET_CREDENTIALS }}" | base64 --decode > /home/runner/service_account_credentials.json
-
-    - name: Display credentials file
-      run: |
         cat /home/runner/service_account_credentials.json
 
     - name: Validate JSON
