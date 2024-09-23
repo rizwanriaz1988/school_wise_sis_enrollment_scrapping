@@ -14,4 +14,4 @@ jobs:
       - name: Test connection with curl
         run: |
           echo "Testing connection to https://sis.punjab.gov.pk/"
-          curl -x http://52.67.10.183:80 -I https://sis.punjab.gov.pk/
+          curl -x https://52.67.10.183:80 -I https://sis.punjab.gov.pk/
