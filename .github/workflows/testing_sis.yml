@@ -1,28 +1,40 @@
-name: Test Website Connectivity
+name: Scrape SIS Punjab and Capture Screenshot
 
 on:
   push:
     branches:
-      - main
+      - main  # Replace with your branch name if different
   workflow_dispatch:  # Allows manual trigger of the workflow
 
 jobs:
-  test-connectivity:
+  scrape-and-screenshot:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Test connection and fetch HTML content
-        run: |
-          echo "Testing connection and fetching HTML content from https://sis.punjab.gov.pk/"
-          curl -k --proxy http://52.67.10.183:80 https://sis.punjab.gov.pk/ -o output.html
-          
-      - name: Display fetched HTML content
-        run: |
-          echo "Displaying the first 100 lines of the fetched HTML content:"
-          head -n 100 output.html
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - name: Upload HTML content as an artifact
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          python -m pip install --upgrade pip
+          pip install selenium pandas openpyxl google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client
+
+      - name: Run scraper and capture screenshot
+        run: |
+          source .venv/bin/activate
+          export http_proxy=http://52.67.10.183:80
+          export https_proxy=http://52.67.10.183:80
+          python sis_school_enrollment.py
+          
+      - name: Upload screenshot as an artifact
         uses: actions/upload-artifact@v3
         with:
-          name: fetched-html-content
-          path: output.html
+          name: screenshot
+          path: screenshot_*.png  # This matches the screenshot file created in the Python script
