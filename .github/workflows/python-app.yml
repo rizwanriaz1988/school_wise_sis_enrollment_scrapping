@@ -1,86 +1,87 @@
 name: Python application
 
 on:
-  # push:
-    # branches:
-      # - main
+  # Schedule the workflow to run daily at 6:00 AM PKT (1:00 AM UTC)
   schedule:
-    - cron: '0 1 * * *'  # Runs daily at 6:00 AM PKT (1:00 AM UTC)
-  workflow_dispatch:
+    - cron: '0 1 * * *'  
+  workflow_dispatch:  # Allows manual trigger of the workflow
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # Specify the environment to run the job
 
     steps:
-      - name: Run scraper in verbose mode
-        run: python -m venv .venv
-        
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3  # Check out the repository code
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.12'
+          python-version: '3.12'  # Set the Python version
+
+      - name: Create virtual environment
+        run: python -m venv .venv  # Create a virtual environment for dependencies
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install selenium pandas openpyxl google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client
+          python -m pip install --upgrade pip  # Upgrade pip to the latest version
+          pip install selenium pandas openpyxl google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client  # Install required packages
 
       - name: Decode Google Sheets credentials
         run: |
-          echo "${{ secrets.GOOGLE_SHEET_CREDENTIALS }}" | base64 -d > /home/runner/service_account_credentials.json
+          echo "${{ secrets.GOOGLE_SHEET_CREDENTIALS }}" | base64 -d > /home/runner/service_account_credentials.json  # Decode and save the credentials
 
       - name: Validate credentials file
         run: |
-          cat /home/runner/service_account_credentials.json
-          jq . /home/runner/service_account_credentials.json  # Validate the JSON structure
+          cat /home/runner/service_account_credentials.json  # Display the credentials file
+          jq . /home/runner/service_account_credentials.json  # Validate the JSON structure using jq
 
       - name: Check for Chrome installation and install if necessary
         run: |
-          if ! command -v google-chrome &> /dev/null; then
+          if ! command -v google-chrome &> /dev/null; then  # Check if Chrome is installed
             echo "Chrome not found, installing..."
-            sudo apt-get update
-            sudo apt-get install -y wget unzip
-            wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-            sudo dpkg -i google-chrome-stable_current_amd64.deb || sudo apt-get install -f -y
-            google-chrome --version
+            sudo apt-get update  # Update package list
+            sudo apt-get install -y wget unzip  # Install wget and unzip
+            wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb  # Download Chrome
+            sudo dpkg -i google-chrome-stable_current_amd64.deb || sudo apt-get install -f -y  # Install Chrome
+            google-chrome --version  # Display Chrome version
           else
-            echo "Chrome is already installed."
+            echo "Chrome is already installed."  # Notify if Chrome is already installed
           fi
 
       - name: Install ChromeDriver
         run: |
-          DRIVER_VERSION="128.0.6613.137"
-          DRIVER_URL="https://storage.googleapis.com/chrome-for-testing-public/$DRIVER_VERSION/linux64/chromedriver-linux64.zip"
+          DRIVER_VERSION="128.0.6613.137"  # Set ChromeDriver version
+          DRIVER_URL="https://storage.googleapis.com/chrome-for-testing-public/$DRIVER_VERSION/linux64/chromedriver-linux64.zip"  # Set the download URL
 
-          echo "Downloading ChromeDriver from: $DRIVER_URL"
-          wget $DRIVER_URL -O chromedriver-linux64.zip
+          echo "Downloading ChromeDriver from: $DRIVER_URL"  # Notify download
+          wget $DRIVER_URL -O chromedriver-linux64.zip  # Download ChromeDriver
 
-          if [ ! -f chromedriver-linux64.zip ]; then
-            echo "Failed to download ChromeDriver. Exiting."
-            exit 1
+          if [ ! -f chromedriver-linux64.zip ]; then  # Check if download was successful
+            echo "Failed to download ChromeDriver. Exiting."  # Error message
+            exit 1  # Exit if download failed
           fi
 
-          unzip chromedriver-linux64.zip
-          sudo mv chromedriver-linux64/chromedriver /usr/local/bin/chromedriver
-          sudo chmod +x /usr/local/bin/chromedriver
-          chromedriver --version
+          unzip chromedriver-linux64.zip  # Unzip the downloaded file
+          sudo mv chromedriver-linux64/chromedriver /usr/local/bin/chromedriver  # Move ChromeDriver to a standard location
+          sudo chmod +x /usr/local/bin/chromedriver  # Make ChromeDriver executable
+          chromedriver --version  # Display ChromeDriver version
 
-      - name: Run Python script
+      - name: Run scraper with Xvfb
         run: |
-          python sis_school_enrollment.py
+          sudo apt-get install -y xvfb  # Install Xvfb for virtual display
+          Xvfb :99 -ac &  # Start Xvfb on display :99
+          export DISPLAY=:99  # Set the DISPLAY variable for Chrome
+          python sis_school_enrollment.py  # Run the Python scraper script
         env:
           GOOGLE_SHEET_CREDENTIALS: ${{ secrets.GOOGLE_SHEET_CREDENTIALS }}  # Pass the secret to the script
 
       - name: List files after script execution
         run: |
-          ls -la
+          ls -la  # List files in the working directory after execution
 
       - name: Upload Excel file
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v3  # Upload generated Excel files as artifacts
         with:
-          name: school-enrollment-data
-          path: '*.xlsx'
+          name: school-enrollment-data  # Name of the uploaded artifact
+          path: '*.xlsx'  # Path to the Excel files
