@@ -43,6 +43,7 @@ chrome_options.add_argument("--no-sandbox")  # Disable sandboxing for compatibil
 chrome_options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource problems
 chrome_options.add_argument("--disable-gpu")  # Disable GPU acceleration
 chrome_options.add_argument(f"user-agent={random.choice(user_agents)}")  # Random user-agent
+chrome_options.add_argument("--start-maximized")  # Start Chrome maximized
 
 # Add the following for non-headless mode
 chrome_options.add_argument("--disable-extensions")  # Disable extensions
