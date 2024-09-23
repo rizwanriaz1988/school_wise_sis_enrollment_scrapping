@@ -22,7 +22,6 @@ user_agents = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36",
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.1 Safari/605.1.15",
-    # Add more user-agents as needed
 ]
 
 # Decode Base64-encoded Google Sheets credentials from environment variable
@@ -40,27 +39,28 @@ service = Service(executable_path=chrome_driver_path)
 # Set up Chrome options with a random user-agent
 chrome_options = webdriver.ChromeOptions()
 chrome_options.add_argument("--headless")
-chrome_options.add_argument("--no-sandbox")  # Disable sandboxing for compatibility
-chrome_options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource problems
-chrome_options.add_argument("--disable-gpu")  # Disable GPU acceleration
-chrome_options.add_argument(f"user-agent={random.choice(user_agents)}")  # Random user-agent
-chrome_options.add_argument("--start-maximized")  # Start Chrome maximized
-chrome_options.add_argument('--proxy-server=http://8.219.97.248:80')  # Your proxy
+chrome_options.add_argument("--no-sandbox")
+chrome_options.add_argument("--disable-dev-shm-usage")
+chrome_options.add_argument("--disable-gpu")
+chrome_options.add_argument(f"user-agent={random.choice(user_agents)}")
+chrome_options.add_argument("--start-maximized")
+chrome_options.add_argument('--proxy-server=http://8.219.97.248:80')  # Use your proxy if required
 
-# Add the following for non-headless mode
-chrome_options.add_argument("--disable-extensions")  # Disable extensions
-chrome_options.add_argument("--remote-debugging-port=9222")  # Enable remote debugging (optional)
+# Disable extensions and enable remote debugging for troubleshooting
+chrome_options.add_argument("--disable-extensions")
+chrome_options.add_argument("--remote-debugging-port=9222")
 
+# Logging setup
 logging.basicConfig(level=logging.INFO)
 
-
-
+# Initialize the Chrome driver
 chrome = webdriver.Chrome(service=service, options=chrome_options)
 chrome.set_page_load_timeout(30)
 
+# The website URL to scrape
 url = 'https://sis.punjab.gov.pk/'
-# url = 'https://httpbin.org/ip'
 
+# Maximum retry attempts for loading the page
 max_retries = 3
 
 try:
@@ -69,33 +69,35 @@ try:
             chrome.get(url)
             print("Page loaded successfully.")
             logging.info("Page loaded successfully")
-            # # Get the displayed IP address
-            # ip_address = chrome.find_element(By.TAG_NAME, 'pre').text
-            # print("IP Address used:", ip_address)    
+
+            # Capture screenshot after page load
+            screenshot_path = f"screenshot_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+            chrome.save_screenshot(screenshot_path)
+            print(f"Screenshot saved to {screenshot_path}")
+
             break
         except TimeoutException as e:
             print(f"Attempt {attempt + 1} failed due to timeout. Retrying in 5 seconds...")
-            print(f"Exception: {e}")
             logging.error(f"Error loading page: {e}")
             time.sleep(5)
         except WebDriverException as e:
             print(f"WebDriver exception encountered: {e}")
             raise
     
+    # Continue with the scraping and other tasks...
     WebDriverWait(chrome, 20).until(EC.element_to_be_clickable((By.ID, "students_search-tab"))).click()
-    
-    # Select district and tehsil
+
     district = Select(WebDriverWait(chrome, 20).until(EC.presence_of_element_located((By.XPATH, '//*[@id="enrollment_tab_form"]/div[1]/select'))))
-    district.select_by_value('33')
-    
+    district.select_by_value('33')  # Choose a specific district by value
+
     tehsil = Select(WebDriverWait(chrome, 20).until(EC.presence_of_element_located((By.XPATH, '//*[@id="enrollment_tab_form"]/div[2]/select'))))
-    tehsil.select_by_value('116')
+    tehsil.select_by_value('116')  # Choose a specific tehsil by value
 
     markaz = Select(WebDriverWait(chrome, 20).until(EC.presence_of_element_located((By.XPATH, '//*[@id="enrollment_tab_form"]/div[3]/select'))))
 
     marakaz_list = []
 
-    for markaz_id in range(6449, 6470):
+    for markaz_id in range(6449, 6470):  # Adjust the range based on available Markaz IDs
         markaz.select_by_value(str(markaz_id))
         time.sleep(random.uniform(3, 7))  # Random wait between 3 to 7 seconds
 
@@ -138,8 +140,8 @@ try:
 
         print(len(marakaz_list))
 
+    # Save scraped data to Excel
     df = pd.DataFrame(marakaz_list)
-
     current_date = datetime.now().strftime("%d-%m-%Y")
     excel_filename = f"school_wise_enrollment_data_{current_date}.xlsx"
     df.to_excel(excel_filename, index=False, engine='openpyxl')
@@ -153,6 +155,7 @@ try:
     SPREADSHEET_ID = '1i0KG-we9EqZt-PeAPxYscKpVb60sfpq-OcVISJz3a7g'
     RANGE_NAME = 'Sheet1!A1'
 
+    # Load the Excel file into a dataframe and upload to Google Sheets
     df = pd.read_excel(excel_filename)
     df.fillna('', inplace=True)
     data = df.values.tolist()
@@ -163,6 +166,7 @@ try:
         'values': values
     }
 
+    # Clear existing data in Google Sheet before uploading
     sheets_service.spreadsheets().values().clear(
         spreadsheetId=SPREADSHEET_ID,
         range=RANGE_NAME
@@ -178,8 +182,7 @@ try:
     print(f"{result.get('updatedCells')} cells updated in Google Sheets.")
 
 except Exception as e:
-    print(f"An error occurred: {e}")
-    sys.exit(1)
-
+    print(f"An error occurred during the scraping process: {e}")
+    logging.error(f"Scraping failed: {e}")
 finally:
     chrome.quit()
