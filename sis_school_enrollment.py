@@ -44,6 +44,7 @@ chrome_options.add_argument("--disable-dev-shm-usage")  # Overcome limited resou
 chrome_options.add_argument("--disable-gpu")  # Disable GPU acceleration
 chrome_options.add_argument(f"user-agent={random.choice(user_agents)}")  # Random user-agent
 chrome_options.add_argument("--start-maximized")  # Start Chrome maximized
+chrome_options.add_argument('--proxy-server=http://8.219.97.248:80')  # Your proxy
 
 # Add the following for non-headless mode
 chrome_options.add_argument("--disable-extensions")  # Disable extensions
