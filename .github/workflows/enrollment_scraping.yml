@@ -11,9 +11,7 @@ jobs:
 
     steps:
     
-      - name: Test website access
-        run: |
-          curl -I https://sis.punjab.gov.pk/
+      
 
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -74,12 +72,14 @@ jobs:
           Xvfb :99 -ac &
           export DISPLAY=:99
           source .venv/bin/activate  # Activate virtual environment before running the script
-          export http_proxy=http://52.67.10.183:80
-          export https_proxy=http://52.67.10.183:80
+          export http_proxy=http://139.59.1.14:8080
+          export https_proxy=http://139.59.1.14:8080
           python sis_school_enrollment.py
         env:
           GOOGLE_SHEET_CREDENTIALS: ${{ secrets.GOOGLE_SHEET_CREDENTIALS }}
 
+
+      
       - name: List files after script execution
         run: ls -la
 
