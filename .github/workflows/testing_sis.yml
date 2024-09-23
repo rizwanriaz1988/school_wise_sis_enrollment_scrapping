@@ -1,7 +1,14 @@
+name: Test Website Connectivity
+
+on:
+  workflow_dispatch:  # Allows manual trigger of the workflow
+
 jobs:
   test-connectivity:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Test connectivity
+      - name: Test connection with curl
         run: |
+          echo "Testing connection to https://sis.punjab.gov.pk/"
           curl -I https://sis.punjab.gov.pk/
