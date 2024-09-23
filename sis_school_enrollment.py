@@ -39,10 +39,14 @@ service = Service(executable_path=chrome_driver_path)
 # Set up Chrome options with a random user-agent
 chrome_options = webdriver.ChromeOptions()
 # chrome_options.add_argument("--headless")
-chrome_options.add_argument("--no-sandbox")
-chrome_options.add_argument("--disable-dev-shm-usage")
-chrome_options.add_argument("--disable-gpu")
+chrome_options.add_argument("--no-sandbox")  # Disable sandboxing for compatibility
+chrome_options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource problems
+chrome_options.add_argument("--disable-gpu")  # Disable GPU acceleration
 chrome_options.add_argument(f"user-agent={random.choice(user_agents)}")  # Random user-agent
+
+# Add the following for non-headless mode
+chrome_options.add_argument("--disable-extensions")  # Disable extensions
+chrome_options.add_argument("--remote-debugging-port=9222")  # Enable remote debugging (optional)
 
 chrome = webdriver.Chrome(service=service, options=chrome_options)
 chrome.set_page_load_timeout(30)
