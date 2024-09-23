@@ -76,6 +76,13 @@ jobs:
       - name: List files after script execution
         run: ls -la
 
+      - name: Upload page source for debugging
+        uses: actions/upload-artifact@v3
+        with:
+          name: page-source
+          path: page_source.html
+
+
       - name: Upload screenshots
         uses: actions/upload-artifact@v3  # Upload generated Excel files as artifacts
         with:
