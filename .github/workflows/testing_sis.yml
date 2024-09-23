@@ -31,7 +31,7 @@ jobs:
           source .venv/bin/activate
           export http_proxy=http://52.67.10.183:80
           export https_proxy=http://52.67.10.183:80
-          python sis_school_enrollment.py
+          python testing_sis.py
           
       - name: Upload screenshot as an artifact
         uses: actions/upload-artifact@v3
