@@ -44,7 +44,7 @@ chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
 chrome_options.add_argument(f"user-agent={random.choice(user_agents)}")
 chrome_options.add_argument("--start-maximized")
-chrome_options.add_argument('--proxy-server=http://8.219.97.248:80')  # Use your proxy if required
+# chrome_options.add_argument('--proxy-server=http://8.219.97.248:80')  # Use your proxy if required
 
 # Disable extensions and enable remote debugging for troubleshooting
 chrome_options.add_argument("--disable-extensions")
