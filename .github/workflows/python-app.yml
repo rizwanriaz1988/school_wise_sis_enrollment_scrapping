@@ -57,6 +57,12 @@ jobs:
           chromedriver --version
           echo 'export PATH=$PATH:/usr/local/bin' >> $GITHUB_ENV
 
+
+      - name: Verify Chrome and ChromeDriver versions
+        run: |
+          google-chrome --version
+          chromedriver --version
+    
       - name: Run scraper with Xvfb
         run: |
           sudo apt-get install -y xvfb
