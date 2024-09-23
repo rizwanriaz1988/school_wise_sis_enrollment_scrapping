@@ -44,6 +44,9 @@ chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
 chrome_options.add_argument(f"user-agent={random.choice(user_agents)}")
 chrome_options.add_argument("--start-maximized")
+chrome_options.add_argument("--disable-software-rasterizer")
+chrome_options.add_argument("--disable-popup-blocking")
+chrome_options.add_argument("--disable-notifications")
 # chrome_options.add_argument('--proxy-server=http://8.219.97.248:80')  # Use your proxy if required
 
 # Disable extensions and enable remote debugging for troubleshooting
@@ -55,7 +58,7 @@ logging.basicConfig(level=logging.INFO)
 
 # Initialize the Chrome driver
 chrome = webdriver.Chrome(service=service, options=chrome_options)
-chrome.set_page_load_timeout(30)
+chrome.set_page_load_timeout(60)
 
 # The website URL to scrape
 url = 'https://sis.punjab.gov.pk/'
