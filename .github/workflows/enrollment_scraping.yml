@@ -1,4 +1,4 @@
-name: Python application
+name: School-wise-sis-enrollment
 
 on:
   schedule:
