@@ -75,7 +75,7 @@ try:
             print("Page loaded successfully.")
             logging.info("Page loaded successfully")
             # Get the displayed IP address
-            ip_address = driver.find_element(By.TAG_NAME, 'pre').text
+            ip_address = chrome.find_element(By.TAG_NAME, 'pre').text
             print("IP Address used:", ip_address)
             # Capture screenshot after page load
             screenshot_path = f"screenshot_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
