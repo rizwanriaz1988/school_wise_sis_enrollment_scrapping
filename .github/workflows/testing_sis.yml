@@ -1,9 +1,9 @@
 name: Scrape SIS Punjab and Capture Screenshot
 
 on:
-  push:
-    branches:
-      - main  # Replace with your branch name if different
+  # push:
+  #   branches:
+  #     - main  # Replace with your branch name if different
   workflow_dispatch:  # Allows manual trigger of the workflow
 
 jobs:
