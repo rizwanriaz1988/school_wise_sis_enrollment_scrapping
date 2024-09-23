@@ -38,7 +38,7 @@ service = Service(executable_path=chrome_driver_path)
 
 # Set up Chrome options with a random user-agent
 chrome_options = webdriver.ChromeOptions()
-# chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")  # Disable sandboxing for compatibility
 chrome_options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource problems
 chrome_options.add_argument("--disable-gpu")  # Disable GPU acceleration
@@ -56,19 +56,19 @@ url = 'https://sis.punjab.gov.pk/'
 max_retries = 3
 
 try:
-    # for attempt in range(max_retries):
-    #     try:
-    #         chrome.get(url)
-    #         print("Page loaded successfully.")
-    #         break
-    #     except TimeoutException as e:
-    #         print(f"Attempt {attempt + 1} failed due to timeout. Retrying in 5 seconds...")
-    #         print(f"Exception: {e}")
-    #         time.sleep(5)
-    #     except WebDriverException as e:
-    #         print(f"WebDriver exception encountered: {e}")
-    #         raise
-    chrome.get(url)
+    for attempt in range(max_retries):
+        try:
+            chrome.get(url)
+            print("Page loaded successfully.")
+            break
+        except TimeoutException as e:
+            print(f"Attempt {attempt + 1} failed due to timeout. Retrying in 5 seconds...")
+            print(f"Exception: {e}")
+            time.sleep(5)
+        except WebDriverException as e:
+            print(f"WebDriver exception encountered: {e}")
+            raise
+    # chrome.get(url)
     WebDriverWait(chrome, 20).until(EC.element_to_be_clickable((By.ID, "students_search-tab"))).click()
     
     # Select district and tehsil
