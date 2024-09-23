@@ -39,7 +39,7 @@ chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64
 chrome = webdriver.Chrome(service=service, options=chrome_options)
 
 # Set a longer page load timeout
-chrome.set_page_load_timeout(60)  # Timeout set to 60 seconds
+chrome.set_page_load_timeout(30)  # Timeout set to 60 seconds
 
 # Retry mechanism
 url = 'https://sis.punjab.gov.pk/'
@@ -49,10 +49,14 @@ for attempt in range(max_retries):
     try:
         chrome.get(url)
         print("Page loaded successfully.")
-        break
-    except TimeoutException:
-        print(f"Attempt {attempt + 1} failed. Retrying in 5 seconds...")
-        time.sleep(5)
+        break  # Exit loop if successful
+    except TimeoutException as e:
+        print(f"Attempt {attempt + 1} failed due to timeout. Retrying in 5 seconds...")
+        print(f"Exception: {e}")
+        time.sleep(5)  # Wait before retrying
+    except WebDriverException as e:
+        print(f"WebDriver exception encountered: {e}")
+        break  # Exit loop on WebDriverException
 else:
     raise Exception("Failed to load the page after several attempts.")
 
