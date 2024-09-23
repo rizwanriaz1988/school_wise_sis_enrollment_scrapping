@@ -35,21 +35,35 @@ chrome_options.add_argument("--disable-gpu")
 
 chrome = webdriver.Chrome(service=service, options=chrome_options)
 
-# Open the website
+# Set a longer page load timeout
+chrome.set_page_load_timeout(60)  # Timeout set to 60 seconds
+
+# Retry mechanism
 url = 'https://sis.punjab.gov.pk/'
-chrome.get(url)
+max_retries = 3  # Number of retries
+
+for attempt in range(max_retries):
+    try:
+        chrome.get(url)
+        print("Page loaded successfully.")
+        break
+    except TimeoutException:
+        print(f"Attempt {attempt + 1} failed. Retrying in 5 seconds...")
+        time.sleep(5)
+else:
+    raise Exception("Failed to load the page after several attempts.")
 
 # Navigate to the 'students_search' tab
-WebDriverWait(chrome, 10).until(EC.element_to_be_clickable((By.ID, "students_search-tab"))).click()
+WebDriverWait(chrome, 20).until(EC.element_to_be_clickable((By.ID, "students_search-tab"))).click()
 
 # Select district and tehsil
-district = Select(WebDriverWait(chrome, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="enrollment_tab_form"]/div[1]/select'))))
+district = Select(WebDriverWait(chrome, 20).until(EC.presence_of_element_located((By.XPATH, '//*[@id="enrollment_tab_form"]/div[1]/select'))))
 district.select_by_value('33')  # Replace with actual district value
 
-tehsil = Select(WebDriverWait(chrome, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="enrollment_tab_form"]/div[2]/select'))))
+tehsil = Select(WebDriverWait(chrome, 20).until(EC.presence_of_element_located((By.XPATH, '//*[@id="enrollment_tab_form"]/div[2]/select'))))
 tehsil.select_by_value('116')  # Replace with actual tehsil value
 
-markaz = Select(WebDriverWait(chrome, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="enrollment_tab_form"]/div[3]/select'))))
+markaz = Select(WebDriverWait(chrome, 20).until(EC.presence_of_element_located((By.XPATH, '//*[@id="enrollment_tab_form"]/div[3]/select'))))
 
 # Prepare to scrape data
 marakaz_list = []
@@ -62,11 +76,11 @@ for markaz_id in range(6449, 6470):
 
     # Click on the filter/search button
     filter_button_xpath = '/html/body/div[5]/div/div/div/div/div/div/div[3]/div[12]/div[3]/div/div/div/div[1]/div/form/div[7]/button'
-    WebDriverWait(chrome, 10).until(EC.element_to_be_clickable((By.XPATH, filter_button_xpath))).click()
+    WebDriverWait(chrome, 20).until(EC.element_to_be_clickable((By.XPATH, filter_button_xpath))).click()
 
     time.sleep(5)
     parent_element_path = "((//*[name()='svg'])[1]//*[name()='g' and @class='highcharts-series-group']//*[name()='g'])[1]"
-    parent_element = WebDriverWait(chrome, 10).until(EC.presence_of_element_located((By.XPATH, parent_element_path)))
+    parent_element = WebDriverWait(chrome, 20).until(EC.presence_of_element_located((By.XPATH, parent_element_path)))
     time.sleep(5)
     rect_elements = parent_element.find_elements(By.TAG_NAME, "rect")
     print(len(rect_elements))
@@ -83,8 +97,8 @@ for markaz_id in range(6449, 6470):
         school_total_enroll_xpath = "//*[name()='svg']//*[name()='g' and @class='highcharts-label highcharts-tooltip highcharts-color-undefined']//*[name()='text']//*[name()='tspan'][3]"
 
         try:
-            school_emis_element = WebDriverWait(chrome, 10).until(EC.presence_of_element_located((By.XPATH, school_emis_xpath)))
-            school_total_enroll_element = WebDriverWait(chrome, 10).until(EC.presence_of_element_located((By.XPATH, school_total_enroll_xpath)))
+            school_emis_element = WebDriverWait(chrome, 20).until(EC.presence_of_element_located((By.XPATH, school_emis_xpath)))
+            school_total_enroll_element = WebDriverWait(chrome, 20).until(EC.presence_of_element_located((By.XPATH, school_total_enroll_xpath)))
 
             school_emis = school_emis_element.text
             school_total_enroll = school_total_enroll_element.text
