@@ -16,11 +16,7 @@ jobs:
           Xvfb :99 -ac &
           export DISPLAY=:99
           sleep 3  # Give Xvfb some time to start
-
-      - name: Test website access
-        run: |
-          curl -I https://sis.punjab.gov.pk/
-
+      
       - name: Checkout repository
         uses: actions/checkout@v3
 
