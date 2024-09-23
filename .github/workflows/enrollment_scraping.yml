@@ -3,15 +3,23 @@ name: School-wise-sis-enrollment
 on:
   schedule:
     - cron: '0 1 * * *'  # Run at 1:00 AM UTC
-  workflow_dispatch:  # Allow manual trigger
+  workflow_dispatch:  # Allows manual trigger
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    
-      
+      - name: Start Xvfb
+        run: |
+          sudo apt-get install -y xvfb
+          Xvfb :99 -ac &
+          export DISPLAY=:99
+          sleep 3  # Give Xvfb some time to start
+
+      - name: Test website access
+        run: |
+          curl -I https://sis.punjab.gov.pk/
 
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -38,7 +46,7 @@ jobs:
           cat /home/runner/service_account_credentials.json
           jq . /home/runner/service_account_credentials.json  # Validate the JSON file
 
-      - name: Check for Chrome installation and install if necessary
+      - name: Install Chrome and ChromeDriver
         run: |
           if ! command -v google-chrome &> /dev/null; then
             echo "Chrome not found, installing..."
@@ -47,39 +55,28 @@ jobs:
             wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
             sudo dpkg -i google-chrome-stable_current_amd64.deb || sudo apt-get install -f -y
           fi
-          google-chrome --version
-
-      - name: Install ChromeDriver
-        run: |
           DRIVER_VERSION="128.0.6613.137"
           DRIVER_URL="https://storage.googleapis.com/chrome-for-testing-public/$DRIVER_VERSION/linux64/chromedriver-linux64.zip"
           wget $DRIVER_URL -O chromedriver-linux64.zip
           unzip chromedriver-linux64.zip
           sudo mv chromedriver-linux64/chromedriver /usr/local/bin/chromedriver
           sudo chmod +x /usr/local/bin/chromedriver
+          google-chrome --version
           chromedriver --version
           echo 'export PATH=$PATH:/usr/local/bin' >> $GITHUB_ENV
 
-
-      - name: Verify Chrome and ChromeDriver versions
+      - name: Run scraper with Xvfb and retry logic
         run: |
-          google-chrome --version
-          chromedriver --version
-    
-      - name: Run scraper with Xvfb
-        run: |
+          source .venv/bin/activate  # Activate virtual environment before running the script
+          export http_proxy=http://52.67.10.183:80
+          export https_proxy=http://52.67.10.183:80
           sudo apt-get install -y xvfb
           Xvfb :99 -ac &
           export DISPLAY=:99
-          source .venv/bin/activate  # Activate virtual environment before running the script
-          export http_proxy=http://139.59.1.14:8080
-          export https_proxy=http://139.59.1.14:8080
           python sis_school_enrollment.py
         env:
           GOOGLE_SHEET_CREDENTIALS: ${{ secrets.GOOGLE_SHEET_CREDENTIALS }}
 
-
-      
       - name: List files after script execution
         run: ls -la
 
@@ -89,14 +86,12 @@ jobs:
           name: page-source
           path: page_source.html
 
-
       - name: Upload screenshots
-        uses: actions/upload-artifact@v3  # Upload generated Excel files as artifacts
+        uses: actions/upload-artifact@v3
         with:
-          name: screenshots  # Name of the uploaded artifact
-          path: '*.png'  # Path to the screenshots
+          name: screenshots
+          path: '*.png'
 
-      
       - name: Upload Excel file
         uses: actions/upload-artifact@v3
         with:
