@@ -2,6 +2,7 @@ import random
 import time
 import base64
 import sys
+import logging
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import Select
@@ -50,6 +51,10 @@ chrome_options.add_argument('--proxy-server=http://8.219.97.248:80')  # Your pro
 chrome_options.add_argument("--disable-extensions")  # Disable extensions
 chrome_options.add_argument("--remote-debugging-port=9222")  # Enable remote debugging (optional)
 
+logging.basicConfig(level=logging.INFO)
+
+
+
 chrome = webdriver.Chrome(service=service, options=chrome_options)
 chrome.set_page_load_timeout(30)
 
@@ -63,6 +68,7 @@ try:
         try:
             chrome.get(url)
             print("Page loaded successfully.")
+            logging.info("Page loaded successfully")
             # # Get the displayed IP address
             # ip_address = chrome.find_element(By.TAG_NAME, 'pre').text
             # print("IP Address used:", ip_address)    
@@ -70,6 +76,7 @@ try:
         except TimeoutException as e:
             print(f"Attempt {attempt + 1} failed due to timeout. Retrying in 5 seconds...")
             print(f"Exception: {e}")
+            logging.error(f"Error loading page: {e}")
             time.sleep(5)
         except WebDriverException as e:
             print(f"WebDriver exception encountered: {e}")
