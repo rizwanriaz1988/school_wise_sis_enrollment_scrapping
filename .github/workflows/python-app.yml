@@ -76,6 +76,13 @@ jobs:
       - name: List files after script execution
         run: ls -la
 
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v3  # Upload generated Excel files as artifacts
+        with:
+          name: screenshots  # Name of the uploaded artifact
+          path: '*.png'  # Path to the screenshots
+
+      
       - name: Upload Excel file
         uses: actions/upload-artifact@v3
         with:
