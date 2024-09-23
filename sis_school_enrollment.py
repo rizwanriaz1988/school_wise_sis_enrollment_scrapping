@@ -1,5 +1,6 @@
 import time
 import base64
+import sys  # Import sys for exit functionality
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import Select
@@ -57,10 +58,9 @@ try:
             time.sleep(5)  # Wait before retrying to load the page
         except WebDriverException as e:
             print(f"WebDriver exception encountered: {e}")  # Log any WebDriver-related issues
-            break  # Exit retry loop on WebDriver exceptions
+            raise  # Re-raise exception to fail the build
     else:
-        # Raise an error if the page failed to load after all attempts
-        raise Exception("Failed to load the page after several attempts.")
+        raise Exception("Failed to load the page after several attempts.")  # Raise an error if the page failed to load after all attempts
 
     # Wait for the 'students_search' tab to be clickable and click it
     WebDriverWait(chrome, 20).until(EC.element_to_be_clickable((By.ID, "students_search-tab"))).click()
@@ -123,6 +123,7 @@ try:
 
             except Exception as e:
                 print(f"An error occurred: {e}")  # Log any exceptions that occur during data extraction
+                raise  # Re-raise exception to fail the build
 
         print(len(marakaz_list))  # Log the current count of collected data
 
@@ -143,17 +144,17 @@ try:
     sheets_service = build('sheets', 'v4', credentials=credentials)  # Build the Sheets API service
 
     SPREADSHEET_ID = '1i0KG-we9EqZt-PeAPxYscKpVb60sfpq-OcVISJz3a7g'  # Replace with your actual spreadsheet ID
-    RANGE_NAME = 'Sheet1!A1'  # Define the range in the spreadsheet to update
+    RANGE_NAME = 'Sheet1!A1'  # Specify the range to update in Google Sheets
 
-    # Fill NaN values with empty strings for Google Sheets compatibility
-    df.fillna('', inplace=True)
-    data = df.values.tolist()  # Convert DataFrame to a list of lists
-    header = df.columns.tolist()  # Get the DataFrame's header (column names)
-    values = [header] + data  # Combine header and data for the update
+    # Read the Excel file into a DataFrame
+    df = pd.read_excel(excel_filename)
+    df.fillna('', inplace=True)  # Replace NaN values with empty strings for cleaner data
+    data = df.values.tolist()  # Convert DataFrame values to a list
+    header = df.columns.tolist()  # Get the column headers
+    values = [header] + data  # Combine header and data for Google Sheets
 
-    # Prepare the body for the Google Sheets API request
     body = {
-        'values': values
+        'values': values  # Create the request body for Google Sheets API
     }
 
     # Clear existing data in the specified range before updating
@@ -166,14 +167,15 @@ try:
     result = sheets_service.spreadsheets().values().update(
         spreadsheetId=SPREADSHEET_ID,
         range=RANGE_NAME,
-        valueInputOption='RAW',  # Use raw values to avoid any formatting issues
+        valueInputOption='RAW',  # Use raw values to avoid formatting issues
         body=body
     ).execute()
 
-    print(f"{result.get('updatedCells')} cells updated in Google Sheets.")  # Log how many cells were updated
+    print(f"{result.get('updatedCells')} cells updated in Google Sheets.")  # Log the number of cells updated
 
 except Exception as e:
     print(f"An error occurred: {e}")  # Log any errors that occur during execution
+    sys.exit(1)  # Exit the script with a non-zero exit code to indicate failure
 
 finally:
     chrome.quit()  # Ensure the Chrome browser is closed after scraping is complete
