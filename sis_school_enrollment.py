@@ -13,7 +13,7 @@ from datetime import datetime
 import os
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+# from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 # Decode Base64-encoded credentials
 BASE64_ENCODED_GOOGLE_CREDENTIALS = os.getenv('GOOGLE_SHEET_CREDENTIALS')
 if BASE64_ENCODED_GOOGLE_CREDENTIALS is None:
@@ -33,12 +33,10 @@ chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-
-capabilities = DesiredCapabilities().CHROME
-capabilities["chrome.page.customHeaders.User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
+chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36")
 
 
-chrome = webdriver.Chrome(service=service, options=chrome_options, desired_capabilities=capabilities)
+chrome = webdriver.Chrome(service=service, options=chrome_options)
 
 # Set a longer page load timeout
 chrome.set_page_load_timeout(60)  # Timeout set to 60 seconds
