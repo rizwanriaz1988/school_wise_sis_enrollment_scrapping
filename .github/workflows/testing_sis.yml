@@ -14,4 +14,4 @@ jobs:
       - name: Test connection with curl
         run: |
           echo "Testing connection to https://sis.punjab.gov.pk/"
-          curl -I -k --proxy http://52.67.10.183:80 -I https://sis.punjab.gov.pk/
+          curl -I -k --proxy http://47.88.31.196:8080 -I https://sis.punjab.gov.pk/
