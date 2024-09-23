@@ -11,7 +11,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Test connection with curl
+      - name: Test connection and fetch HTML content
         run: |
-          echo "Testing connection to https://sis.punjab.gov.pk/"
-          curl -I -k --proxy http://52.67.10.183:80 -I https://sis.punjab.gov.pk/
+          echo "Testing connection and fetching HTML content from https://sis.punjab.gov.pk/"
+          curl -k --proxy http://52.67.10.183:80 https://sis.punjab.gov.pk/ -o output.html
+          
+      - name: Display fetched HTML content
+        run: |
+          echo "Displaying the first 100 lines of the fetched HTML content:"
+          head -n 100 output.html
+
+      - name: Upload HTML content as an artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: fetched-html-content
+          path: output.html
