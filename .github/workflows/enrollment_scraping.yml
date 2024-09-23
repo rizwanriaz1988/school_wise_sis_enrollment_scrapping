@@ -74,6 +74,8 @@ jobs:
           Xvfb :99 -ac &
           export DISPLAY=:99
           source .venv/bin/activate  # Activate virtual environment before running the script
+          export http_proxy=http://52.67.10.183:80
+          export https_proxy=http://52.67.10.183:80
           python sis_school_enrollment.py
         env:
           GOOGLE_SHEET_CREDENTIALS: ${{ secrets.GOOGLE_SHEET_CREDENTIALS }}
