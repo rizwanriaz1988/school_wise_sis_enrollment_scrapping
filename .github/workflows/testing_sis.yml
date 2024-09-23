@@ -1,0 +1,7 @@
+jobs:
+  test-connectivity:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test connectivity
+        run: |
+          curl -I https://sis.punjab.gov.pk/
