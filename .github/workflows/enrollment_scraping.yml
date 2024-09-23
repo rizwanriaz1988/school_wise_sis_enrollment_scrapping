@@ -3,20 +3,17 @@ name: School-wise-sis-enrollment
 on:
   schedule:
     - cron: '0 1 * * *'  # Run at 1:00 AM UTC
-  workflow_dispatch:  # Allows manual trigger
+  workflow_dispatch:  # Allow manual trigger
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Start Xvfb
+      - name: Test website access
         run: |
-          sudo apt-get install -y xvfb
-          Xvfb :99 -ac &
-          export DISPLAY=:99
-          sleep 3  # Give Xvfb some time to start
-      
+          curl -I https://sis.punjab.gov.pk/
+
       - name: Checkout repository
         uses: actions/checkout@v3
 
@@ -61,14 +58,11 @@ jobs:
           chromedriver --version
           echo 'export PATH=$PATH:/usr/local/bin' >> $GITHUB_ENV
 
-      - name: Run scraper with Xvfb and retry logic
+      - name: Run scraper
         run: |
           source .venv/bin/activate  # Activate virtual environment before running the script
           export http_proxy=http://52.67.10.183:80
           export https_proxy=http://52.67.10.183:80
-          sudo apt-get install -y xvfb
-          Xvfb :99 -ac &
-          export DISPLAY=:99
           python sis_school_enrollment.py
         env:
           GOOGLE_SHEET_CREDENTIALS: ${{ secrets.GOOGLE_SHEET_CREDENTIALS }}
