@@ -10,10 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Test website access
-        run: |
-          curl -I https://sis.punjab.gov.pk/
-
+      
       - name: Checkout repository
         uses: actions/checkout@v3
 
