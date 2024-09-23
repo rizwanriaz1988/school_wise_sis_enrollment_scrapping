@@ -78,6 +78,12 @@ try:
             # ip_address = chrome.find_element(By.TAG_NAME, 'pre').text
             # print("IP Address used:", ip_address)
             # Capture screenshot after page load
+            # Save the HTML for debugging
+            with open("page_source.html", "w") as file:
+                file.write(chrome.page_source)
+            
+
+            
             screenshot_path = f"screenshot_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
             chrome.save_screenshot(screenshot_path)
             print(f"Screenshot saved to {screenshot_path}")
