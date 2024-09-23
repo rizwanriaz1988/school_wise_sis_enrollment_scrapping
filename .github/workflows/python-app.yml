@@ -62,7 +62,7 @@ jobs:
           sudo apt-get install -y xvfb
           Xvfb :99 -ac &
           export DISPLAY=:99
-          sleep 3  # Wait for Xvfb to initialize
+          source .venv/bin/activate  # Activate virtual environment before running the script
           python sis_school_enrollment.py
         env:
           GOOGLE_SHEET_CREDENTIALS: ${{ secrets.GOOGLE_SHEET_CREDENTIALS }}
