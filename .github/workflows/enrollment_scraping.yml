@@ -24,7 +24,7 @@ jobs:
           python -m venv .venv  # Create virtual environment
           source .venv/bin/activate  # Activate virtual environment
           python -m pip install --upgrade pip
-          pip install selenium pandas openpyxl google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client
+          pip install --upgrade selenium pandas openpyxl google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client
 
       - name: Decode Google Sheets credentials
         run: |
