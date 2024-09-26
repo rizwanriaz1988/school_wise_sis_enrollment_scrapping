@@ -1,40 +1,34 @@
-name: Scrape SIS Punjab and Capture Screenshot
+name: Check Website Accessibility
 
 on:
-  # push:
-  #   branches:
-  #     - main  # Replace with your branch name if different
-  workflow_dispatch:  # Allows manual trigger of the workflow
+  push:
+    branches:
+      - main
 
 jobs:
-  scrape-and-screenshot:
+  check-accessibility:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.12'
-
-      - name: Install dependencies
+      - name: Check website accessibility
+        id: check_site
         run: |
-          python -m venv .venv
-          source .venv/bin/activate
-          python -m pip install --upgrade pip
-          pip install selenium pandas openpyxl google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client
+          # Use curl to check the website accessibility and capture the output
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" https://sis.punjab.gov.pk/)
+          echo "HTTP Response Code: $RESPONSE"
 
-      - name: Run scraper and capture screenshot
+          # Get the public IP address
+          IP_ADDRESS=$(curl -s http://api.ipify.org)
+          echo "GitHub Actions IP Address: $IP_ADDRESS"
+
+          # Check if the response code is 200 (OK)
+          if [ "$RESPONSE" -eq 200 ]; then
+            echo "Website is accessible."
+          else
+            echo "Website is not accessible. HTTP Response Code: $RESPONSE"
+            exit 1
+          fi
+
+      - name: Log IP address
         run: |
-          source .venv/bin/activate
-          export http_proxy=http://52.67.10.183:80
-          export https_proxy=http://52.67.10.183:80
-          python testing_sis.py
-          
-      - name: Upload screenshot as an artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: screenshot
-          path: screenshot_*.png  # This matches the screenshot file created in the Python script
+          echo "Accessed from IP Address: ${{ steps.check_site.outputs.ip_address }}"
