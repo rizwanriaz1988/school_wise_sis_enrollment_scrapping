@@ -11,34 +11,15 @@ jobs:
 
     steps:
       - name: Check website accessibility
-        id: check_site
         run: |
-          # Function to check website accessibility with retries
-          check_accessibility() {
-            local retries=3
-            local count=0
-            local timeout=10
-            
-            while [ $count -lt $retries ]; do
-              RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" --max-time $timeout https://sis.punjab.gov.pk/)
-              IP_ADDRESS=$(curl -s --max-time $timeout http://api.ipify.org)
+          # Use curl to check the website accessibility and capture the output
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" https://sis.punjab.gov.pk/)
+          echo "HTTP Response Code: $RESPONSE"
 
-              echo "HTTP Response Code: $RESPONSE"
-              echo "GitHub Actions IP Address: $IP_ADDRESS"
-
-              if [ "$RESPONSE" -eq 200 ]; then
-                echo "Website is accessible."
-                return 0
-              else
-                echo "Attempt $((count + 1)) failed: Website is not accessible. HTTP Response Code: $RESPONSE"
-                count=$((count + 1))
-                sleep 5  # wait before retrying
-              fi
-            done
-            
-            echo "Website is not accessible after $retries attempts."
+          # Check if the response code is 200 (OK)
+          if [ "$RESPONSE" -eq 200 ]; then
+            echo "Website is accessible."
+          else
+            echo "Website is not accessible. HTTP Response Code: $RESPONSE"
             exit 1
-          }
-
-          # Call the function to check accessibility
-          check_accessibility
+          fi
