@@ -42,8 +42,8 @@ markaz= Select(WebDriverWait(chrome, 10).until(EC.presence_of_element_located((B
 marakaz_list = []
 
 # for loop for looping through marakaz
-for markaz_id in range(6449, 6470):
-# for markaz_id in range(6449, 6450):
+# for markaz_id in range(6449, 6470):
+for markaz_id in range(6449, 6450):
 
     markaz.select_by_value(str(markaz_id))
     time.sleep(5)
@@ -56,7 +56,12 @@ for markaz_id in range(6449, 6470):
 
     time.sleep(5)
     # Locate the parent element by XPath
-    parent_element_path = "((//*[name()='svg'])[1]//*[name()='g' and @class='highcharts-series-group']//*[name()='g'])[1]"
+
+    # old xpath
+    # parent_element_path = "((//*[name()='svg'])[1]//*[name()='g' and @class='highcharts-series-group']//*[name()='g'])[1]"
+
+    # new xpath
+    parent_element_path = '//*[@id="gender_area"]//*[name()="svg" and @class="highcharts-root"]//*[name()="g" and @class="highcharts-series-group"]//*[name()="g"][1]'
     parent_element = WebDriverWait(chrome, 10).until(EC.presence_of_element_located((By.XPATH, parent_element_path)))
     time.sleep(5)
     # Find all rect elements within the parent element
