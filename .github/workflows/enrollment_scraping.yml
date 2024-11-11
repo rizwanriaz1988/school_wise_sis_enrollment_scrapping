@@ -1,0 +1,86 @@
+name: School-wise-sis-enrollment
+
+on:
+  # schedule:
+    # - cron: '0 1 * * *'  # Run at 1:00 AM UTC
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m venv .venv  # Create virtual environment
+          source .venv/bin/activate  # Activate virtual environment
+          python -m pip install --upgrade pip
+          pip install --upgrade selenium pandas openpyxl google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client
+
+      - name: Decode Google Sheets credentials
+        run: |
+          echo "${{ secrets.GOOGLE_SHEET_CREDENTIALS }}" | base64 -d > /home/runner/service_account_credentials.json
+
+      - name: Validate credentials file
+        run: |
+          sudo apt-get install -y jq  # Install jq
+          cat /home/runner/service_account_credentials.json
+          jq . /home/runner/service_account_credentials.json  # Validate the JSON file
+
+      - name: Install Chrome and ChromeDriver
+        run: |
+          if ! command -v google-chrome &> /dev/null; then
+            echo "Chrome not found, installing..."
+            sudo apt-get update
+            sudo apt-get install -y wget unzip
+            wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+            sudo dpkg -i google-chrome-stable_current_amd64.deb || sudo apt-get install -f -y
+          fi
+          DRIVER_VERSION="128.0.6613.137"
+          DRIVER_URL="https://storage.googleapis.com/chrome-for-testing-public/$DRIVER_VERSION/linux64/chromedriver-linux64.zip"
+          wget $DRIVER_URL -O chromedriver-linux64.zip
+          unzip chromedriver-linux64.zip
+          sudo mv chromedriver-linux64/chromedriver /usr/local/bin/chromedriver
+          sudo chmod +x /usr/local/bin/chromedriver
+          google-chrome --version
+          chromedriver --version
+          echo 'export PATH=$PATH:/usr/local/bin' >> $GITHUB_ENV
+
+      - name: Run scraper
+        run: |
+          source .venv/bin/activate  # Activate virtual environment before running the script
+          export http_proxy=http://103.155.62.163:8080
+          export https_proxy=http://103.155.62.163:8080
+          python sis_school_enrollment.py
+        env:
+          GOOGLE_SHEET_CREDENTIALS: ${{ secrets.GOOGLE_SHEET_CREDENTIALS }}
+
+      - name: List files after script execution
+        run: ls -la
+
+      - name: Upload page source for debugging
+        uses: actions/upload-artifact@v3
+        with:
+          name: page-source
+          path: page_source.html
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v3
+        with:
+          name: screenshots
+          path: '*.png'
+
+      - name: Upload Excel file
+        uses: actions/upload-artifact@v3
+        with:
+          name: school-enrollment-data
+          path: '*.xlsx'

@@ -1,0 +1,25 @@
+name: Check Website Accessibility
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  check-accessibility:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check website accessibility
+        run: |
+          # Use curl to check the website accessibility and capture the output
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" https://sis.punjab.gov.pk/)
+          echo "HTTP Response Code: $RESPONSE"
+
+          # Check if the response code is 200 (OK)
+          if [ "$RESPONSE" -eq 200 ]; then
+            echo "Website is accessible."
+          else
+            echo "Website is not accessible. HTTP Response Code: $RESPONSE"
+            exit 1
+          fi

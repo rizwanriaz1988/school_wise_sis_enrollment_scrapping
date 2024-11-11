@@ -1,67 +1,130 @@
+import random
 import time
+import base64
+import sys
+import logging
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service  # Correct way to specify ChromeDriver path
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.by import By
 from selenium.webdriver import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException, WebDriverException
 import pandas as pd
 from datetime import datetime
-# Path to your ChromeDriver
-chrome_driver_path = 'C:/Web Drivers/chromedriver.exe'
+import os
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
 
-# Use Service to specify ChromeDriver path
+# List of user-agents for rotation
+user_agents = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.1 Safari/605.1.15",
+]
+
+# Decode Base64-encoded Google Sheets credentials from environment variable
+BASE64_ENCODED_GOOGLE_CREDENTIALS = os.getenv('GOOGLE_SHEET_CREDENTIALS')
+if BASE64_ENCODED_GOOGLE_CREDENTIALS is None:
+    raise ValueError("The environment variable GOOGLE_SHEET_CREDENTIALS is not set or is empty.")
+
+SERVICE_ACCOUNT_FILE = '/home/runner/service_account_credentials.json'
+with open(SERVICE_ACCOUNT_FILE, 'wb') as f:
+    f.write(base64.b64decode(BASE64_ENCODED_GOOGLE_CREDENTIALS))
+
+chrome_driver_path = '/usr/bin/chromedriver'
 service = Service(executable_path=chrome_driver_path)
 
-# Optional: Set Chrome options if needed
+# Set up Chrome options with a random user-agent
 chrome_options = webdriver.ChromeOptions()
+chrome_options.add_argument("--headless")
+chrome_options.add_argument("--no-sandbox")
+chrome_options.add_argument("--disable-dev-shm-usage")
+chrome_options.add_argument("--disable-gpu")
+chrome_options.add_argument(f"user-agent={random.choice(user_agents)}")
+chrome_options.add_argument("--start-maximized")
+chrome_options.add_argument("--disable-software-rasterizer")
+chrome_options.add_argument("--disable-popup-blocking")
+chrome_options.add_argument("--disable-notifications")
+# chrome_options.add_argument('--proxy-server=http://52.67.10.183:80')  # Use your proxy if required
 
-# Initialize WebDriver with Service and Options
+# Disable extensions and enable remote debugging for troubleshooting
+chrome_options.add_argument("--disable-extensions")
+chrome_options.add_argument("--remote-debugging-port=9222")
+
+# Logging setup
+logging.basicConfig(level=logging.INFO)
+
+# Initialize the Chrome driver
 chrome = webdriver.Chrome(service=service, options=chrome_options)
+chrome.set_page_load_timeout(60)
 
-# Open the website
+# The website URL to scrape
 url = 'https://sis.punjab.gov.pk/'
-chrome.get(url)
+# url = 'https://httpbin.org/ip'
 
-# Navigate to the 'students_search' tab
-WebDriverWait(chrome, 10).until(EC.element_to_be_clickable((By.ID, "students_search-tab"))).click()
 
-# Select district and tehsil
-district = Select(WebDriverWait(chrome, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="enrollment_tab_form"]/div[1]/select'))))
-district.select_by_value('33')  # Replace with actual district value
+# Maximum retry attempts for loading the page
+max_retries = 3
 
-# Select tehsil
-tehsil = Select(WebDriverWait(chrome, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="enrollment_tab_form"]/div[2]/select'))))
-tehsil.select_by_value('116')  # Replace with actual tehsil value
+try:
+    for attempt in range(max_retries):
+        try:
+            chrome.get(url)
+            print("Page loaded successfully.")
+            logging.info("Page loaded successfully")
+            # Get the displayed IP address
+            # ip_address = chrome.find_element(By.TAG_NAME, 'pre').text
+            # print("IP Address used:", ip_address)
+            # Capture screenshot after page load
+            # Save the HTML for debugging
+            with open("page_source.html", "w") as file:
+                file.write(chrome.page_source)
+            
 
-# Select markaz (markaz ids range from 6449 to 6469)
-markaz= Select(WebDriverWait(chrome, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="enrollment_tab_form"]/div[3]/select'))))
+            
+            screenshot_path = f"screenshot_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+            chrome.save_screenshot(screenshot_path)
+            print(f"Screenshot saved to {screenshot_path}")
 
-# Prepare to scrape data
-marakaz_list = []
+            break
+        except TimeoutException as e:
+            print(f"Attempt {attempt + 1} failed due to timeout. Retrying in 5 seconds...")
+            logging.error(f"Error loading page: {e}")
+            time.sleep(5)
+        except WebDriverException as e:
+            print(f"WebDriver exception encountered: {e}")
+            raise
+    
+    # Continue with the scraping and other tasks...
+    WebDriverWait(chrome, 20).until(EC.element_to_be_clickable((By.ID, "students_search-tab"))).click()
+
+    district = Select(WebDriverWait(chrome, 20).until(EC.presence_of_element_located((By.XPATH, '//*[@id="enrollment_tab_form"]/div[1]/select'))))
+    district.select_by_value('33')  # Choose a specific district by value
+
+    tehsil = Select(WebDriverWait(chrome, 20).until(EC.presence_of_element_located((By.XPATH, '//*[@id="enrollment_tab_form"]/div[2]/select'))))
+    tehsil.select_by_value('116')  # Choose a specific tehsil by value
+
+    markaz = Select(WebDriverWait(chrome, 20).until(EC.presence_of_element_located((By.XPATH, '//*[@id="enrollment_tab_form"]/div[3]/select'))))
+
+    marakaz_list = []
 
 # for loop for looping through marakaz
-# for markaz_id in range(6449, 6470):
-for markaz_id in range(6449, 6450):
+for markaz_id in range(6449, 6470):
+# for markaz_id in range(6449, 6450):
 
     markaz.select_by_value(str(markaz_id))
     time.sleep(5)
 
-    # Click on the filter/search button
-    filter_button_xpath = '/html/body/div[5]/div/div/div/div/div/div/div[3]/div[12]/div[3]/div/div/div/div[1]/div/form/div[7]/button'
-    WebDriverWait(chrome, 10).until(EC.element_to_be_clickable((By.XPATH, filter_button_xpath))).click()
+        filter_button_xpath = '/html/body/div[5]/div/div/div/div/div/div/div[3]/div[12]/div[3]/div/div/div/div[1]/div/form/div[7]/button'
+        WebDriverWait(chrome, 20).until(EC.element_to_be_clickable((By.XPATH, filter_button_xpath))).click()
 
-  
+        time.sleep(random.uniform(3, 7))  # Random wait after clicking the filter
 
     time.sleep(5)
     # Locate the parent element by XPath
-
-    # old xpath
-    # parent_element_path = "((//*[name()='svg'])[1]//*[name()='g' and @class='highcharts-series-group']//*[name()='g'])[1]"
-
-    # new xpath
-    parent_element_path = '//*[@id="gender_area"]//*[name()="svg" and @class="highcharts-root"]//*[name()="g" and @class="highcharts-series-group"]//*[name()="g"][1]'
+    parent_element_path = "((//*[name()='svg'])[1]//*[name()='g' and @class='highcharts-series-group']//*[name()='g'])[1]"
     parent_element = WebDriverWait(chrome, 10).until(EC.presence_of_element_located((By.XPATH, parent_element_path)))
     time.sleep(5)
     # Find all rect elements within the parent element
@@ -85,40 +148,68 @@ for markaz_id in range(6449, 6450):
         school_emis_xpath = "//*[name()='svg']//*[name()='g' and @class='highcharts-label highcharts-tooltip highcharts-color-undefined']//*[name()='text']//*[name()='tspan'][1]"
         school_total_enroll_xpath = "//*[name()='svg']//*[name()='g' and @class='highcharts-label highcharts-tooltip highcharts-color-undefined']//*[name()='text']//*[name()='tspan'][3]"
 
-        try:
-            # Use WebDriverWait to wait until elements are present
-            school_emis_element = WebDriverWait(chrome, 10).until(EC.presence_of_element_located((By.XPATH, school_emis_xpath)))
-            school_total_enroll_element = WebDriverWait(chrome, 10).until(EC.presence_of_element_located((By.XPATH, school_total_enroll_xpath)))
+            try:
+                school_emis_element = WebDriverWait(chrome, 20).until(EC.presence_of_element_located((By.XPATH, school_emis_xpath)))
+                school_total_enroll_element = WebDriverWait(chrome, 20).until(EC.presence_of_element_located((By.XPATH, school_total_enroll_xpath)))
 
-            # Extract the text from the elements
-            school_emis = school_emis_element.text
-            school_total_enroll = school_total_enroll_element.text
+                school_emis = school_emis_element.text
+                school_total_enroll = school_total_enroll_element.text
+                school_enroll = school_total_enroll[7:]
 
-            # Process the text
-            school_enroll = school_total_enroll[7:]  # Adjust this slicing based on your data format
+                marakaz_list.append({
+                    'EMIS Code': school_emis,
+                    'Enrollment': school_enroll
+                })
 
-            # Update the marakaz dictionary
-            marakaz_list.append({
-                'EMIS Code': school_emis,
-                'Enrollment': school_enroll
-            })
+            except Exception as e:
+                print(f"An error occurred: {e}")
+                raise
 
-        except Exception as e:
-            print(f"An error occurred: {e}")
-
-        # print(marakaz_list)
         print(len(marakaz_list))
 
+    # Save scraped data to Excel
+    df = pd.DataFrame(marakaz_list)
+    current_date = datetime.now().strftime("%d-%m-%Y")
+    excel_filename = f"school_wise_enrollment_data_{current_date}.xlsx"
+    df.to_excel(excel_filename, index=False, engine='openpyxl')
+    print(f"Data saved to {excel_filename}")
 
-# Convert the list of dictionaries to a DataFrame
+    # Google Sheets API integration
+    SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+    credentials = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+    sheets_service = build('sheets', 'v4', credentials=credentials)
 
-df = pd.DataFrame(marakaz_list)
+    SPREADSHEET_ID = '1i0KG-we9EqZt-PeAPxYscKpVb60sfpq-OcVISJz3a7g'
+    RANGE_NAME = 'Sheet1!A1'
 
-# Get the current date and time
-current_date = datetime.now().strftime("%d-%m-%Y")  # Format: YYYY-MM-DD
+    # Load the Excel file into a dataframe and upload to Google Sheets
+    df = pd.read_excel(excel_filename)
+    df.fillna('', inplace=True)
+    data = df.values.tolist()
+    header = df.columns.tolist()
+    values = [header] + data
 
-# Save the DataFrame to an Excel file
-excel_filename = f"school_wise_enrollment_data_{current_date}.xlsx"
-df.to_excel(excel_filename, index=False, engine='openpyxl')
+    body = {
+        'values': values
+    }
 
-print(f"Data saved to {excel_filename}")
+    # Clear existing data in Google Sheet before uploading
+    sheets_service.spreadsheets().values().clear(
+        spreadsheetId=SPREADSHEET_ID,
+        range=RANGE_NAME
+    ).execute()
+
+    result = sheets_service.spreadsheets().values().update(
+        spreadsheetId=SPREADSHEET_ID,
+        range=RANGE_NAME,
+        valueInputOption='RAW',
+        body=body
+    ).execute()
+
+    print(f"{result.get('updatedCells')} cells updated in Google Sheets.")
+
+except Exception as e:
+    print(f"An error occurred during the scraping process: {e}")
+    logging.error(f"Scraping failed: {e}")
+finally:
+    chrome.quit()

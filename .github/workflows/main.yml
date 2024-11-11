@@ -1,0 +1,62 @@
+name: Test Google Service Account
+
+on:
+  # push:
+  #   branches:
+  #     - main
+  workflow_dispatch: # Allows manually triggering the workflow
+
+jobs:
+  check-google-service-account:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Set up Google Cloud SDK
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          version: 'latest'
+
+      # Decode the Base64-encoded service account JSON secret and save it to a file
+      - name: Decode and Save Service Account Key
+        env:
+          BASE64_ENCODED_GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_SHEET_CREDENTIALS }}
+        run: |
+          echo "Decoding the Base64 secret..."
+          echo "$BASE64_ENCODED_GOOGLE_CREDENTIALS" | base64 --decode > "$HOME/gcloud-service-key.json"
+
+      # Authenticate with Google Cloud using the service account JSON
+      - name: Authenticate to Google Cloud
+        run: |
+          # Validate the JSON format using jq
+          echo "Validating JSON format..."
+          cat "$HOME/gcloud-service-key.json" | jq .
+
+          # Authenticate with the service account
+          echo "Authenticating with Google Cloud..."
+          gcloud auth activate-service-account --key-file="$HOME/gcloud-service-key.json"
+
+          # Set the project ID manually (update this with your actual project ID)
+          PROJECT_ID="valid-perigee-402216"  # Replace with your actual project ID
+          echo "Setting project ID to $PROJECT_ID..."
+          gcloud config set project $PROJECT_ID
+
+          # Verify the project ID
+          echo "Verifying project ID..."
+          PROJECT_ID=$(gcloud config get-value project)
+          echo "PROJECT_ID=$PROJECT_ID"
+
+          # Enable Cloud Resource Manager API
+          echo "Enabling Cloud Resource Manager API for project $PROJECT_ID..."
+          gcloud services enable cloudresourcemanager.googleapis.com --project=$PROJECT_ID
+
+          # List authenticated accounts to verify
+          gcloud auth list
+
+      # Verify access by listing available Google Cloud projects (example check)
+      - name: Verify Service Account Permissions
+        run: gcloud projects list
