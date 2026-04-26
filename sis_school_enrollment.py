@@ -61,7 +61,8 @@ chrome = webdriver.Chrome(service=service, options=chrome_options)
 chrome.set_page_load_timeout(60)
 
 # The website URL to scrape
-url = 'https://sis.punjab.gov.pk/'
+# url = 'https://sis.punjab.gov.pk/'
+url = 'https://sis.pesrp.edu.pk/'
 # url = 'https://httpbin.org/ip'
 
 
@@ -142,6 +143,7 @@ for markaz_id in range(6449, 6470):
 
         # Pause to ensure the tooltip appears
         time.sleep(2)
+        
         
 
        # Define the XPaths for the elements
